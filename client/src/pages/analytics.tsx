@@ -25,7 +25,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import { UserActivity, UserStats } from "../../shared/schema";
+import { UserActivity, UserStats } from "@shared/schema";
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<string>("30");

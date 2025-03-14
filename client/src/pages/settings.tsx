@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { AppSettings } from "../../shared/schema";
+import { AppSettings } from "@shared/schema";
 
 // Settings form schema
 const settingsFormSchema = z.object({
@@ -50,22 +50,13 @@ export default function SettingsPage() {
   // Fetch settings
   const { data: settings, isLoading } = useQuery({
     queryKey: ["/api/settings"],
-    queryFn: async () => {
-      const response = await apiRequest("/api/settings");
-      return response as AppSettings;
-    },
   });
 
   // Update settings mutation
   const { mutate: updateSettings, isPending } = useMutation({
     mutationFn: async (data: SettingsFormValues) => {
-      return apiRequest("/api/settings", {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await apiRequest("PUT", "/api/settings", data);
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
@@ -96,7 +87,7 @@ export default function SettingsPage() {
   });
 
   // Update form when settings are loaded
-  useState(() => {
+  useEffect(() => {
     if (settings) {
       form.reset({
         allowRegistration: settings.allowRegistration,
@@ -106,7 +97,7 @@ export default function SettingsPage() {
         vipFeatures: settings.vipFeatures,
       });
     }
-  });
+  }, [settings, form]);
 
   // Handle form submission
   const onSubmit = (values: SettingsFormValues) => {
