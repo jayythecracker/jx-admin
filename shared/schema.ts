@@ -51,6 +51,28 @@ export const filterUserSchema = z.object({
   limit: z.number().optional().default(10),
 });
 
+// Analytics and settings types
+export interface UserStats {
+  totalUsers: number;
+  activeUsers: number;
+  bannedUsers: number;
+  vipUsers: number;
+  newUsers: number; // Last 7 days
+}
+
+export interface UserActivity {
+  date: string;
+  userCount: number;
+}
+
+export interface AppSettings {
+  allowRegistration: boolean;
+  maintenanceMode: boolean;
+  vipFeatures: string[];
+  appVersion: string;
+  notificationMessage: string;
+}
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;

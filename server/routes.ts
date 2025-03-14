@@ -102,6 +102,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Analytics routes
+  app.get("/api/analytics/stats", async (_req, res) => {
+    try {
+      const stats = await storage.getUserStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ message: "Failed to fetch user statistics" });
+    }
+  });
+
+  app.get("/api/analytics/activity", async (req, res) => {
+    try {
+      const days = req.query.days ? parseInt(req.query.days as string) : 30;
+      const activityData = await storage.getUserActivityTrend(days);
+      res.json(activityData);
+    } catch (error) {
+      console.error("Error fetching user activity:", error);
+      res.status(500).json({ message: "Failed to fetch user activity data" });
+    }
+  });
+
+  // Settings routes
+  app.get("/api/settings", async (_req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ message: "Failed to fetch application settings" });
+    }
+  });
+
+  app.put("/api/settings", async (req, res) => {
+    try {
+      const updatedSettings = await storage.updateSettings(req.body);
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      res.status(500).json({ message: "Failed to update application settings" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

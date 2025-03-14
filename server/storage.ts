@@ -1,16 +1,35 @@
-import { users, type User, type InsertUser, type UpdateUser, type FilterUserParams } from "@shared/schema";
+import { users, type User, type InsertUser, type UpdateUser, type FilterUserParams, 
+  type UserStats, type UserActivity, type AppSettings } from "@shared/schema";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL || "";
 const supabaseKey = process.env.SUPABASE_KEY || "";
 
+// Default settings
+const DEFAULT_SETTINGS: AppSettings = {
+  allowRegistration: true,
+  maintenanceMode: false,
+  vipFeatures: ["Priority Support", "Extended Expiration", "Premium Content"],
+  appVersion: "1.0.0",
+  notificationMessage: ""
+};
+
 export interface IStorage {
+  // User management
   getUsers(filters: FilterUserParams): Promise<{ data: User[], count: number }>;
   getUser(id: string): Promise<User | null>;
   updateUser(id: string, user: UpdateUser): Promise<User>;
   banUser(id: string): Promise<User>;
   unbanUser(id: string): Promise<User>;
   setVipStatus(id: string, isVip: boolean): Promise<User>;
+  
+  // Analytics
+  getUserStats(): Promise<UserStats>;
+  getUserActivityTrend(days: number): Promise<UserActivity[]>;
+  
+  // Settings
+  getSettings(): Promise<AppSettings>;
+  updateSettings(settings: Partial<AppSettings>): Promise<AppSettings>;
 }
 
 export class SupabaseStorage implements IStorage {
@@ -128,6 +147,101 @@ export class SupabaseStorage implements IStorage {
 
   async setVipStatus(id: string, isVip: boolean): Promise<User> {
     return this.updateUser(id, { is_vip: isVip } as UpdateUser);
+  }
+
+  // Analytics methods
+  async getUserStats(): Promise<UserStats> {
+    // Get total users
+    const { count: totalUsers } = await this.supabase
+      .from('users2')
+      .select('*', { count: 'exact', head: true });
+
+    // Get active (non-banned) users
+    const { count: activeUsers } = await this.supabase
+      .from('users2')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_banned', false);
+
+    // Get banned users
+    const { count: bannedUsers } = await this.supabase
+      .from('users2')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_banned', true);
+
+    // Get VIP users
+    const { count: vipUsers } = await this.supabase
+      .from('users2')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_vip', true);
+
+    // Get new users in last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const { count: newUsers } = await this.supabase
+      .from('users2')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', sevenDaysAgo.toISOString());
+
+    return {
+      totalUsers: totalUsers || 0,
+      activeUsers: activeUsers || 0,
+      bannedUsers: bannedUsers || 0,
+      vipUsers: vipUsers || 0,
+      newUsers: newUsers || 0
+    };
+  }
+
+  async getUserActivityTrend(days: number = 30): Promise<UserActivity[]> {
+    // Get signups per day for the last 'days' days
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - days);
+    
+    const { data } = await this.supabase
+      .from('users2')
+      .select('created_at')
+      .gte('created_at', daysAgo.toISOString());
+    
+    if (!data) return [];
+
+    // Create a map of dates to count
+    const activityByDate = new Map<string, number>();
+    
+    // Initialize all dates in the range
+    for (let i = 0; i < days; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      activityByDate.set(dateString, 0);
+    }
+    
+    // Count users by date
+    data.forEach(user => {
+      const dateStr = new Date(user.created_at).toISOString().split('T')[0];
+      const count = activityByDate.get(dateStr) || 0;
+      activityByDate.set(dateStr, count + 1);
+    });
+    
+    // Convert to array and sort by date
+    return Array.from(activityByDate.entries())
+      .map(([date, userCount]) => ({ date, userCount }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  // Settings methods
+  private settings: AppSettings = { ...DEFAULT_SETTINGS };
+  
+  async getSettings(): Promise<AppSettings> {
+    return this.settings;
+  }
+  
+  async updateSettings(newSettings: Partial<AppSettings>): Promise<AppSettings> {
+    this.settings = {
+      ...this.settings,
+      ...newSettings
+    };
+    
+    return this.settings;
   }
 }
 
