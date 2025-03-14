@@ -26,13 +26,18 @@ export const insertUserSchema = createInsertSchema(users).pick({
   is_banned: true,
 });
 
-export const updateUserSchema = createInsertSchema(users).pick({
-  name: true,
-  phone: true,
-  imei: true,
-  is_vip: true,
-  expired_at: true,
-  is_banned: true,
+// Define a custom update schema to handle string and null values properly
+export const updateUserSchema = z.object({
+  name: z.string(),
+  phone: z.string().optional(),
+  imei: z.string().optional(),
+  is_vip: z.boolean().optional(),
+  is_banned: z.boolean().optional(),
+  expired_at: z.string().nullable().optional().transform(val => {
+    // Convert string to Date or keep null
+    if (val === "" || val === null || val === undefined) return null;
+    return new Date(val);
+  }),
 });
 
 export const filterUserSchema = z.object({

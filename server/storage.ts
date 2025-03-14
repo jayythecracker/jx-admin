@@ -91,14 +91,27 @@ export class SupabaseStorage implements IStorage {
   }
 
   async updateUser(id: string, user: UpdateUser): Promise<User> {
+    // Process expired_at date properly
+    const userData = { ...user } as any; // Use any to avoid TypeScript errors during conversion
+    
+    // Ensure expired_at is properly formatted for Supabase
+    if (userData.expired_at instanceof Date) {
+      // Format as ISO string for Supabase
+      userData.expired_at = userData.expired_at.toISOString();
+    } else if (userData.expired_at === "") {
+      // Handle empty string by setting to null
+      userData.expired_at = null;
+    }
+    
     const { data, error } = await this.supabase
       .from("users2")
-      .update(user)
+      .update(userData)
       .eq("id", id)
       .select()
       .single();
 
     if (error) {
+      console.error("Supabase update error:", error);
       throw new Error(`Failed to update user: ${error.message}`);
     }
 

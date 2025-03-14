@@ -25,24 +25,27 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { formatDate } from "@/lib/utils";
 
-// Extend the schema to add client-side specific validation
-const editUserSchema = updateUserSchema
-  .extend({
-    expired_at: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.expired_at === "") return true;
-      if (!data.expired_at) return true;
-      
-      const date = new Date(data.expired_at);
-      return !isNaN(date.getTime());
-    },
-    {
-      message: "Invalid date format",
-      path: ["expired_at"],
-    }
-  );
+// Create a new schema for client-side validation
+const editUserSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().optional(),
+  imei: z.string().optional(),
+  is_vip: z.boolean().default(false),
+  is_banned: z.boolean().default(false),
+  expired_at: z.string().optional(),
+}).refine(
+  (data) => {
+    if (data.expired_at === "") return true;
+    if (!data.expired_at) return true;
+    
+    const date = new Date(data.expired_at);
+    return !isNaN(date.getTime());
+  },
+  {
+    message: "Invalid date format",
+    path: ["expired_at"],
+  }
+);
 
 type EditUserFormValues = z.infer<typeof editUserSchema>;
 
@@ -91,11 +94,15 @@ export function UserEditModal({
   const onSubmit = async (values: EditUserFormValues) => {
     if (!user) return;
     
-    // Convert empty string to null for expired_at
-    const formattedValues: UpdateUser = {
-      ...values,
-      expired_at: values.expired_at ? new Date(values.expired_at) : null,
-    };
+    // Convert form values to match UpdateUser type
+    const formattedValues = {
+      name: values.name,
+      phone: values.phone || "",
+      imei: values.imei || "",
+      is_vip: values.is_vip,
+      is_banned: values.is_banned,
+      expired_at: values.expired_at ? values.expired_at : null,
+    } as UpdateUser;
     
     onSave(user.id, formattedValues);
   };
