@@ -50,6 +50,11 @@ export default function SettingsPage() {
   // Fetch settings
   const { data: settings, isLoading } = useQuery({
     queryKey: ["/api/settings"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/settings");
+      const data = await response.json();
+      return data as AppSettings;
+    },
   });
 
   // Update settings mutation

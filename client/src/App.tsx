@@ -16,6 +16,8 @@ function Router() {
       <main className="flex-1 pt-16 md:pt-0">
         <Switch>
           <Route path="/" component={Dashboard} />
+          <Route path="/analytics" component={AnalyticsPage} />
+          <Route path="/settings" component={SettingsPage} />
           <Route component={NotFound} />
         </Switch>
       </main>

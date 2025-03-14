@@ -34,8 +34,9 @@ export default function AnalyticsPage() {
   const { data: stats, isLoading: isLoadingStats } = useQuery({
     queryKey: ["/api/analytics/stats"],
     queryFn: async () => {
-      const response = await apiRequest("/api/analytics/stats");
-      return response as UserStats;
+      const response = await apiRequest("GET", "/api/analytics/stats");
+      const data = await response.json();
+      return data as UserStats;
     },
   });
 
@@ -44,9 +45,11 @@ export default function AnalyticsPage() {
     queryKey: ["/api/analytics/activity", timeRange],
     queryFn: async () => {
       const response = await apiRequest(
+        "GET",
         `/api/analytics/activity?days=${timeRange}`
       );
-      return response as UserActivity[];
+      const data = await response.json();
+      return data as UserActivity[];
     },
   });
 
