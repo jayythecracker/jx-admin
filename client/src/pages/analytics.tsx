@@ -29,12 +29,13 @@ import { UserActivity, UserStats } from "@shared/schema";
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<string>("30");
+  const [currentTable, setCurrentTable] = useState<'users' | 'users2'>('users2');
 
   // Fetch user statistics
   const { data: stats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["/api/analytics/stats"],
+    queryKey: ["/api/analytics/stats", currentTable],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/analytics/stats");
+      const response = await apiRequest("GET", `/api/analytics/stats?table=${currentTable}`);
       const data = await response.json();
       return data as UserStats;
     },
@@ -42,11 +43,11 @@ export default function AnalyticsPage() {
 
   // Fetch user activity trend
   const { data: activityData, isLoading: isLoadingActivity } = useQuery({
-    queryKey: ["/api/analytics/activity", timeRange],
+    queryKey: ["/api/analytics/activity", timeRange, currentTable],
     queryFn: async () => {
       const response = await apiRequest(
         "GET",
-        `/api/analytics/activity?days=${timeRange}`
+        `/api/analytics/activity?days=${timeRange}&table=${currentTable}`
       );
       const data = await response.json();
       return data as UserActivity[];
@@ -79,6 +80,22 @@ export default function AnalyticsPage() {
         <p className="text-muted-foreground">
           Monitor user statistics and activity trends.
         </p>
+      </div>
+
+      {/* Table Selection */}
+      <div className="mb-8">
+        <Select 
+          value={currentTable} 
+          onValueChange={(value: 'users' | 'users2') => setCurrentTable(value)}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Select user table" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="users">Legacy Users</SelectItem>
+            <SelectItem value="users2">New Users</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Stats Cards */}
@@ -177,8 +194,6 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* User Activity Calendar and Heatmap could be added here */}
     </div>
   );
 }
