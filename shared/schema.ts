@@ -2,6 +2,22 @@ import { pgTable, text, serial, uuid, boolean, timestamp } from "drizzle-orm/pg-
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Legacy users table
+export const usersLegacy = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull().unique(),
+  passcode_hash: text("passcode_hash").notNull(),
+  imei: text("imei").notNull(),
+  is_vip: boolean("is_vip").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+  expired_at: timestamp("expired_at"),
+  last_login: timestamp("last_login"),
+  current_device: text("current_device"),
+  is_banned: boolean("is_banned").default(false)
+});
+
+// New users table (users2)
 export const users = pgTable("users2", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -16,6 +32,7 @@ export const users = pgTable("users2", {
   is_banned: boolean("is_banned").default(false)
 });
 
+// Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   name: true,
   phone: true,
@@ -26,7 +43,17 @@ export const insertUserSchema = createInsertSchema(users).pick({
   is_banned: true,
 });
 
-// Define a custom update schema to handle string and null values properly
+export const insertLegacyUserSchema = createInsertSchema(usersLegacy).pick({
+  name: true,
+  phone: true,
+  passcode_hash: true,
+  imei: true,
+  is_vip: true,
+  expired_at: true,
+  is_banned: true,
+});
+
+// Update schema
 export const updateUserSchema = z.object({
   name: z.string(),
   phone: z.string().optional(),
@@ -34,12 +61,12 @@ export const updateUserSchema = z.object({
   is_vip: z.boolean().optional(),
   is_banned: z.boolean().optional(),
   expired_at: z.string().nullable().optional().transform(val => {
-    // Convert string to Date or keep null
     if (val === "" || val === null || val === undefined) return null;
     return new Date(val);
   }),
 });
 
+// Filter schema
 export const filterUserSchema = z.object({
   name: z.string().optional(),
   phone: z.string().optional(),
@@ -49,6 +76,7 @@ export const filterUserSchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
   page: z.number().optional().default(1),
   limit: z.number().optional().default(10),
+  table: z.enum(['users', 'users2']).optional().default('users2'),
 });
 
 // Analytics and settings types
@@ -71,9 +99,12 @@ export interface AppSettings {
   vipFeatures: string[];
   appVersion: string;
   notificationMessage: string;
+  activeUserTable: 'users' | 'users2';
 }
 
 export type User = typeof users.$inferSelect;
+export type LegacyUser = typeof usersLegacy.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertLegacyUser = z.infer<typeof insertLegacyUserSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;
 export type FilterUserParams = z.infer<typeof filterUserSchema>;
