@@ -3,7 +3,7 @@ services:
     name: supabase-admin-panel
     env: node
     plan: free
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci && npx vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
     startCommand: node dist/index.js
     healthCheckPath: /api/health
     envVars:
@@ -13,4 +13,6 @@ services:
         sync: false
       - key: SUPABASE_KEY
         sync: false
+      - key: NPM_CONFIG_PRODUCTION
+        value: false
     autoDeploy: true
