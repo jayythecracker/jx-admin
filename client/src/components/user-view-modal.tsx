@@ -42,7 +42,7 @@ export function UserViewModal({ user, isOpen, onClose, onEdit }: UserViewModalPr
             Detailed information about the user.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="mt-4">
           <div className="flex flex-col sm:flex-row sm:items-center mb-4">
             <div className="flex-shrink-0 h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto sm:mx-0">
@@ -56,7 +56,7 @@ export function UserViewModal({ user, isOpen, onClose, onEdit }: UserViewModalPr
                 {user.is_banned ? (
                   <Badge variant="destructive">Banned</Badge>
                 ) : (
-                  <Badge variant="success" className="bg-green-100 text-green-800 hover:bg-green-200">
+                  <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-200">
                     Active
                   </Badge>
                 )}
@@ -68,9 +68,9 @@ export function UserViewModal({ user, isOpen, onClose, onEdit }: UserViewModalPr
               </div>
             </div>
           </div>
-          
+
           <Separator className="my-4" />
-          
+
           <dl className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">Phone</dt>
@@ -97,7 +97,7 @@ export function UserViewModal({ user, isOpen, onClose, onEdit }: UserViewModalPr
               <dd className="mt-1 text-sm text-gray-900">{user.current_device || "Unknown"}</dd>
             </div>
           </dl>
-          
+
           {loginHistory.length > 0 && (
             <>
               <Separator className="my-4" />
@@ -119,7 +119,7 @@ export function UserViewModal({ user, isOpen, onClose, onEdit }: UserViewModalPr
             </>
           )}
         </div>
-        
+
         <DialogFooter className="mt-4">
           <Button 
             variant="default" 

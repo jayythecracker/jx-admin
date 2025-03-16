@@ -16,9 +16,10 @@ interface UserFiltersProps {
   onFilterChange: (filters: Partial<FilterUserParams>) => void;
   isLoading: boolean;
   onRefresh: () => void;
+  currentTable: 'users' | 'users2';
 }
 
-export function UserFilters({ onFilterChange, isLoading, onRefresh }: UserFiltersProps) {
+export function UserFilters({ onFilterChange, isLoading, onRefresh, currentTable }: UserFiltersProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [vipStatus, setVipStatus] = useState<string>("all");
@@ -57,6 +58,25 @@ export function UserFilters({ onFilterChange, isLoading, onRefresh }: UserFilter
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
       <div className="flex flex-col md:flex-row gap-4">
+        {/* Table Selection */}
+        <div className="w-full md:w-40">
+          <Label htmlFor="tableSelect" className="mb-1">User Table</Label>
+          <Select 
+            value={currentTable} 
+            onValueChange={(value: 'users' | 'users2') => 
+              onFilterChange({ table: value, page: 1 })
+            }
+          >
+            <SelectTrigger id="tableSelect">
+              <SelectValue placeholder="Select table" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="users">Legacy Users</SelectItem>
+              <SelectItem value="users2">New Users</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="flex-1">
           <Label htmlFor="search" className="mb-1">Search by Name</Label>
           <div className="relative">
@@ -72,7 +92,7 @@ export function UserFilters({ onFilterChange, isLoading, onRefresh }: UserFilter
             </div>
           </div>
         </div>
-        
+
         <div className="flex-1">
           <Label htmlFor="phoneSearch" className="mb-1">Search by Phone</Label>
           <div className="relative">
@@ -88,7 +108,7 @@ export function UserFilters({ onFilterChange, isLoading, onRefresh }: UserFilter
             </div>
           </div>
         </div>
-        
+
         <div className="w-full md:w-40">
           <Label htmlFor="vipFilter" className="mb-1">VIP Status</Label>
           <Select 
@@ -105,7 +125,7 @@ export function UserFilters({ onFilterChange, isLoading, onRefresh }: UserFilter
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="w-full md:w-40">
           <Label htmlFor="banFilter" className="mb-1">Ban Status</Label>
           <Select 
@@ -122,7 +142,7 @@ export function UserFilters({ onFilterChange, isLoading, onRefresh }: UserFilter
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="w-full md:w-48">
           <Label htmlFor="sortBy" className="mb-1">Sort By</Label>
           <Select 

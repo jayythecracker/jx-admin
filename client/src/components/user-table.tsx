@@ -125,7 +125,7 @@ export function UserTable({
                       {user.is_banned ? (
                         <Badge variant="destructive">Banned</Badge>
                       ) : (
-                        <Badge variant="success" className="bg-green-100 text-green-800 hover:bg-green-200">
+                        <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-200">
                           Active
                         </Badge>
                       )}
@@ -189,7 +189,7 @@ export function UserTable({
           </TableBody>
         </Table>
       </div>
-      
+
       {/* Pagination */}
       <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
         <div className="flex flex-col md:flex-row justify-between items-center">
@@ -213,7 +213,7 @@ export function UserTable({
                   <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </Button>
-              
+
               {pagination.getPageRange().map((page, index) => (
                 page === "..." ? (
                   <Button
@@ -239,7 +239,7 @@ export function UserTable({
                   </Button>
                 )
               ))}
-              
+
               <Button
                 variant="outline"
                 className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 text-sm font-medium text-gray-500 hover:bg-gray-50"

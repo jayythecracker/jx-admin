@@ -23,7 +23,8 @@ export default function Dashboard() {
     sortBy: "created_at",
     sortOrder: "desc",
     page: 1,
-    limit: 10
+    limit: 10,
+    table: "users2" // Default to users2 table
   });
 
   // State for modals
@@ -44,7 +45,7 @@ export default function Dashboard() {
     queryKey: ['/api/users', filters],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
-      
+
       if (filters.name) queryParams.append('name', filters.name);
       if (filters.phone) queryParams.append('phone', filters.phone);
       if (filters.is_vip !== 'all') queryParams.append('is_vip', filters.is_vip);
@@ -53,14 +54,15 @@ export default function Dashboard() {
       if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
       if (filters.page) queryParams.append('page', filters.page.toString());
       if (filters.limit) queryParams.append('limit', filters.limit.toString());
-      
+      queryParams.append('table', filters.table); // Add table parameter
+
       const url = `/api/users?${queryParams.toString()}`;
       const res = await fetch(url, { credentials: 'include' });
-      
+
       if (!res.ok) {
         throw new Error(`Error fetching users: ${res.statusText}`);
       }
-      
+
       return await res.json() as { data: User[], count: number };
     }
   });
@@ -68,7 +70,7 @@ export default function Dashboard() {
   // Update user mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, userData }: { id: string, userData: UpdateUser }) => {
-      const res = await apiRequest('PUT', `/api/users/${id}`, userData);
+      const res = await apiRequest('PUT', `/api/users/${id}?table=${filters.table}`, userData);
       return await res.json() as User;
     },
     onSuccess: () => {
@@ -91,7 +93,7 @@ export default function Dashboard() {
   // Ban user mutation
   const banMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest('POST', `/api/users/${id}/ban`, {});
+      const res = await apiRequest('POST', `/api/users/${id}/ban?table=${filters.table}`, {});
       return await res.json() as User;
     },
     onSuccess: () => {
@@ -114,7 +116,7 @@ export default function Dashboard() {
   // Unban user mutation
   const unbanMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiRequest('POST', `/api/users/${id}/unban`, {});
+      const res = await apiRequest('POST', `/api/users/${id}/unban?table=${filters.table}`, {});
       return await res.json() as User;
     },
     onSuccess: () => {
@@ -137,7 +139,7 @@ export default function Dashboard() {
   // Set VIP status mutation
   const setVipMutation = useMutation({
     mutationFn: async ({ id, isVip }: { id: string, isVip: boolean }) => {
-      const res = await apiRequest('POST', `/api/users/${id}/vip`, { isVip });
+      const res = await apiRequest('POST', `/api/users/${id}/vip?table=${filters.table}`, { isVip });
       return await res.json() as User;
     },
     onSuccess: () => {
@@ -156,7 +158,9 @@ export default function Dashboard() {
   const handleFilterChange = (newFilters: Partial<FilterUserParams>) => {
     setFilters(prevFilters => ({
       ...prevFilters,
-      ...newFilters
+      ...newFilters,
+      // Reset page to 1 when changing filters except for page changes
+      page: 'page' in newFilters ? newFilters.page || 1 : 1
     }));
   };
 
@@ -238,6 +242,7 @@ export default function Dashboard() {
         onFilterChange={handleFilterChange} 
         isLoading={isLoading}
         onRefresh={() => refetch()}
+        currentTable={filters.table}
       />
 
       {/* Users Table */}
@@ -272,7 +277,7 @@ export default function Dashboard() {
         onSave={handleSaveUser}
         isPending={updateMutation.isPending}
       />
-      
+
       {selectedUser && (
         <>
           {createBanConfirmation(
@@ -282,7 +287,7 @@ export default function Dashboard() {
             handleConfirmBan,
             banMutation.isPending
           )}
-          
+
           {createUnbanConfirmation(
             selectedUser,
             isUnbanModalOpen,
